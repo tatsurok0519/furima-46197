@@ -1,65 +1,63 @@
-```mermaid
-erDiagram
-    USERS ||--o{ ITEMS : "出品"
-    USERS ||--o{ ORDERS : "購入"
-    USERS ||--o{ COMMENTS : "コメントする"
 
-    ITEMS ||--|| ORDERS : "購入される"
-    ITEMS ||--o{ COMMENTS : "コメントされる"
+### users テーブル
 
-    ORDERS ||--|| ADDRESSES : "配送先"
+| Column             | Type       | Options                      |
+| :----------------- | :--------- | :--------------------------- |
+| nickname           | string     | null: false                  |
+| email              | string     | null: false, unique: true    |
+| encrypted_password | string     | null: false                  |
+| last_name          | string     | null: false                  |
+| first_name         | string     | null: false                  |
+| last_name_kana     | string     | null: false                  |
+| first_name_kana    | string     | null: false                  |
+| birth_date         | date       | null: false                  |
 
-    USERS {
-        bigint id PK
-        string nickname "ニックネーム"
-        string email "メールアドレス"
-        string password "パスワード"
-        string password_confirmation "パスワード確認"
-        datetime created_at
-        datetime updated_at
-    }
 
-    ITEMS {
-        bigint id PK
-        string name "商品名"
-        text description "商品の説明"
-        integer price "価格"
-        bigint user_id FK "出品者"
-        integer category_id "カテゴリー"
-        integer condition_id "商品の状態"
-        integer postage_id "配送料の負担"
-        integer prefecture_id "発送元の地域"
-        integer shipping_day_id "発送日の目安"
-        datetime created_at
-        datetime updated_at
-    }
+### items テーブル
 
-    ORDERS {
-        bigint id PK
-        bigint user_id FK "購入者"
-        bigint item_id FK "商品"
-        datetime created_at
-        datetime updated_at
-    }
+| Column            | Type       | Options                           |
+| :---------------- | :--------- | :-------------------------------- |
+| name              | string     | null: false                       |
+| description       | text       | null: false                       |
+| price             | integer    | null: false                       |
+| user              | references | null: false, foreign_key: true    |
+| category_id       | integer    | null: false                       |
+| condition_id      | integer    | null: false                       |
+| postage_id        | integer    | null: false                       |
+| prefecture_id     | integer    | null: false                       |
+| shipping_day_id   | integer    | null: false                       |
 
-    ADDRESSES {
-        bigint id PK
-        bigint order_id FK "注文"
-        string postal_code "郵便番号"
-        integer prefecture_id "都道府県"
-        string city "市区町村"
-        string house_number "番地"
-        string building_name "建物名"
-        string phone_number "電話番号"
-        datetime created_at
-        datetime updated_at
-    }
+### orders テーブル
 
-    COMMENTS {
-        bigint id PK
-        bigint user_id FK "コメントした人"
-        text content "コメント内容"
-        datetime created_at
-        datetime updated_at
-    }
-```
+| Column | Type       | Options                           |
+| :----- | :--------- | :-------------------------------- |
+| user   | references | null: false, foreign_key: true    |
+| item   | references | null: false, foreign_key: true    |
+
+### addresses テーブル
+
+| Column        | Type       | Options                           |
+| :------------ | :--------- | :-------------------------------- |
+| order         | references | null: false, foreign_key: true    |
+| postal_code   | string     | null: false                       |
+| prefecture_id | integer    | null: false                       |
+| city          | string     | null: false                       |
+| house_number  | string     | null: false                       |
+| building_name | string     |                                   |
+| phone_number  | string     | null: false                       |
+
+
+### Association
+
+- **User**
+  - `has_many :items`
+  - `has_many :orders`
+- **Item**
+  - `belongs_to :user`
+  - `has_one :order`
+- **Order**
+  - `belongs_to :user`
+  - `belongs_to :item`
+  - `has_one :address`
+- **Address**
+  - `belongs_to :order`
