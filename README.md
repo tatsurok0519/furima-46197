@@ -11,7 +11,8 @@
 | last_name_kana     | string     | null: false                  |
 | first_name_kana    | string     | null: false                  |
 | birth_date         | date       | null: false                  |
-
+| created_at         | datetime   | null: false                  |
+| updated_at         | datetime   | null: false                  |
 
 ### items テーブル
 
@@ -26,13 +27,17 @@
 | postage_id        | integer    | null: false                       |
 | prefecture_id     | integer    | null: false                       |
 | shipping_day_id   | integer    | null: false                       |
+| created_at        | datetime   | null: false                       |
+| updated_at        | datetime   | null: false                       |
 
 ### orders テーブル
 
-| Column | Type       | Options                           |
-| :----- | :--------- | :-------------------------------- |
-| user   | references | null: false, foreign_key: true    |
-| item   | references | null: false, foreign_key: true    |
+| Column     | Type       | Options                           |
+| :--------- | :--------- | :-------------------------------- |
+| user       | references | null: false, foreign_key: true    |
+| item       | references | null: false, foreign_key: true    |
+| created_at | datetime   | null: false                       |
+| updated_at | datetime   | null: false                       |
 
 ### addresses テーブル
 
@@ -45,6 +50,8 @@
 | house_number  | string     | null: false                       |
 | building_name | string     |                                   |
 | phone_number  | string     | null: false                       |
+| created_at    | datetime   | null: false                       |
+| updated_at    | datetime   | null: false                       |
 
 
 ### Association
