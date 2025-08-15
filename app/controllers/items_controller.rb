@@ -44,7 +44,7 @@ class ItemsController < ApplicationController
     @item = Item.find(params[:id])
   end
 
-  def redirect_if_not_owner_or_sold
-    redirect_to root_path if @item.user_id != current_user.id || @item.order.present?
-  end
+  # def redirect_if_not_owner_or_sold
+  #   redirect_to root_path if @item.user_id != current_user.id || @item.order.present?
+  # end
 end
