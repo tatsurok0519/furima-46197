@@ -2,22 +2,21 @@ class OrdersController < ApplicationController
   # ログインしていないユーザーはログインページに遷移させる
   before_action :authenticate_user!
   before_action :set_item, only: [:index, :create]
-  before_action :redirect_if_inappropriate, only: [:index, :create]
+  before_action :redirect_if_seller_or_sold, only: [:index, :create]
 
   def index
-    @order_address = OrderAddress.new
+    gon.public_key = ENV["PAYJP_PUBLIC_KEY"]
+    @order_shipping_address = OrderShippingAddress.new
   end
 
   def create
-    # フォームから送られてきた情報でフォームオブジェクトを初期化
-    @order_address = OrderAddress.new(order_params)
-    if @order_address.valid?
-      # バリデーションをクリアしたら、データを保存
-      @order_address.save
-      # トップページにリダイレクト
+    @order_shipping_address = OrderShippingAddress.new(order_params)
+    if @order_shipping_address.valid?
+      pay_item
+      @order_shipping_address.save
       redirect_to root_path
     else
-      # バリデーションエラーがあれば、購入ページを再表示
+      gon.public_key = ENV["PAYJP_PUBLIC_KEY"]
       render :index, status: :unprocessable_entity
     end
   end
@@ -30,12 +29,19 @@ class OrdersController < ApplicationController
 
   def order_params
     # フォームから送信される情報をフィルタリングし、必要な情報をマージ
-    # :token はクレジットカード決済で利用します
-    params.require(:order_address).permit(:postal_code, :prefecture_id, :city, :addresses, :building, :phone_number).merge(user_id: current_user.id, item_id: params[:item_id], token: params[:token])
+    params.require(:order_shipping_address).permit(:postcode, :prefecture_id, :city, :block, :building, :phone_number).merge(user_id: current_user.id, item_id: params[:item_id], token: params[:token])
   end
   
-  def redirect_if_inappropriate
-    # 出品者自身が購入しようとした場合、または商品が売却済みの場合はトップページへリダイレクト
-    redirect_to root_path if @item.user_id == current_user.id || @item.order.present?
+  def pay_item
+    Payjp.api_key = ENV["PAYJP_SECRET_KEY"] # PAY.JPテスト秘密鍵
+    Payjp::Charge.create(
+      amount: @item.price,  # 商品の値段
+      card: order_params[:token],    # カードトークン
+      currency: 'jpy'                 # 通貨の種類（日本円）
+    )
+  end
+
+  def redirect_if_seller_or_sold
+    redirect_to root_path if current_user.id == @item.user_id || @item.order.present?
   end
 end
