@@ -1,43 +1,60 @@
 class OrderShippingAddress
-  # ActiveModel::Modelをincludeすることで、
-  # ActiveRecordを継承していなくてもバリデーションなどの機能が使えるようになります。
   include ActiveModel::Model
+  attr_accessor :user_id, :item_id, :token, :postcode, :prefecture_id, :city, :block, :building, :phone_number
 
-  # フォームで扱う属性（カラム）をすべて定義します。
-  # これが「入れ物」となり、フォームからのデータを受け取ります。
-  attr_accessor :user_id, :item_id, :token, :postal_code, :prefecture_id, :city, :street_address, :building_name, :phone_number
-
-  # --- バリデーション ---
-  # `with_options`で共通の`presence: true`をまとめています。
   with_options presence: true do
     validates :user_id
     validates :item_id
     validates :token
-    validates :city, presence: true
-    validates :street_address, presence: true
-    # 郵便番号は「3桁ハイフン4桁」の半角文字列のみ許可します。
-    validates :postal_code, presence: true, format: { with: /\A[0-9]{3}-[0-9]{4}\z/, message: 'is invalid. Include hyphen(-)' }
-    # 電話番号は10桁以上11桁以内の半角数値のみ許可します。
-    validates :phone_number, presence: true, format: { with: /\A\d{10,11}\z/, message: 'is invalid' }
+    validates :city
+    validates :block
+    validates :postcode, format: { with: /\A[0-9]{3}-[0-9]{4}\z/, message: 'is invalid. Include hyphen(-)' }
+    validates :phone_number, format: { with: /\A\d{10,11}\z/, message: 'is invalid. Input only number' }
   end
 
-  # 都道府県は「---」が選択されていないことを検証します（idが1以外）。
   validates :prefecture_id, numericality: { other_than: 1, message: "can't be blank" }
 
-  # データをテーブルに保存する処理
+  # カスタムバリデーションは、privateの外側（クラスの直下）に記述します
+  validate :seller_cannot_be_buyer
+  validate :item_is_not_already_sold
+
   def save
-    # バリデーションを通過しない場合は、ここで処理を中断します。
+    # valid?でバリデーションを実行し、NGならここで処理を終える
     return false unless valid?
 
-    # トランザクション処理により、途中でエラーが発生した場合はすべての変更を無かったことにします。
+    # transaction内で!付きメソッドを使うと、どちらかの保存に失敗した場合、
+    # 自動的に処理全体が取り消される（ロールバック）ため、データの整合性が保たれる
     ActiveRecord::Base.transaction do
-      # 最初に購入情報（Order）を保存します。`create!`は失敗時に例外を発生させます。
       order = Order.create!(user_id: user_id, item_id: item_id)
-      # 次に配送先情報（ShippingAddress）を保存します。
-      ShippingAddress.create!(postal_code: postal_code, prefecture_id: prefecture_id, city: city, street_address: street_address, building_name: building_name, phone_number: phone_number, order_id: order.id)
+      ShippingAddress.create!(
+        postcode: postcode, prefecture_id: prefecture_id, city: city,
+        block: block, building: building, phone_number: phone_number,
+        order_id: order.id
+      )
     end
     true
   rescue ActiveRecord::RecordInvalid
+    # transaction内でエラーが発生した場合、falseを返して処理を終える
     false
+  end
+
+  private
+
+  def item_exists?
+    item_id.present?
+  end
+
+  def seller_cannot_be_buyer
+    # if: :item_exists? でitemの存在は保証されているため、item&. は不要
+    errors.add(:user_id, "can't purchase their own item") if item.user_id == user_id
+  end
+
+  def item_is_not_already_sold
+    # if: :item_exists? でitemの存在は保証されているため、item&. は不要
+    errors.add(:item_id, 'has already been sold') if item.order.present?
+  end
+
+  def item
+    @item ||= Item.find_by(id: item_id)
   end
 end
