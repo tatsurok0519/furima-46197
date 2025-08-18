@@ -1,6 +1,11 @@
 const pay = () => {
-  const publicKey = gon.public_key
-  const payjp = Payjp(publicKey) // PAY.JPテスト公開鍵
+  const form = document.getElementById('charge-form');
+  if (!form) {
+    return;
+  }
+  
+  const publicKey = gon.public_key;
+  const payjp = Payjp(publicKey);
   const elements = payjp.elements();
   const numberElement = elements.create('cardNumber');
   const expiryElement = elements.create('cardExpiry');
@@ -10,23 +15,26 @@ const pay = () => {
   expiryElement.mount('#expiry-form');
   cvcElement.mount('#cvc-form');
 
-  const form = document.getElementById('charge-form');
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
+    const submitButton = form.querySelector('input[type="submit"]');
+    submitButton.disabled = true;
+  
     payjp.createToken(numberElement).then(function (response) {
       if (response.error) {
-        // エラーハンドリング（必要に応じて実装）
+        alert("カード情報が正しくありません。");
+        submitButton.disabled = false;
       } else {
         const token = response.id;
-        const renderDom = document.getElementById("charge-form");
         const tokenObj = `<input value=${token} name='token' type="hidden">`;
-        renderDom.insertAdjacentHTML("beforeend", tokenObj);
+        form.insertAdjacentHTML("beforeend", tokenObj);
+      
+        numberElement.clear();
+        expiryElement.clear();
+        cvcElement.clear();
+        form.submit();
       }
-      numberElement.clear();
-      expiryElement.clear();
-      cvcElement.clear();
-      document.getElementById("charge-form").submit();
     });
   });
 };
