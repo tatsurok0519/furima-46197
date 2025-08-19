@@ -22,35 +22,32 @@ class OrderShippingAddress
     # valid?でバリデーションを実行し、NGならここで処理を終える
     return false unless valid?
 
-    # transaction内で!付きメソッドを使うと、どちらかの保存に失敗した場合、
-    # 自動的に処理全体が取り消される（ロールバック）ため、データの整合性が保たれる
-    ActiveRecord::Base.transaction do
-      order = Order.create!(user_id: user_id, item_id: item_id)
-      ShippingAddress.create!(
-        postcode: postcode, prefecture_id: prefecture_id, city: city,
-        block: block, building: building, phone_number: phone_number,
-        order_id: order.id
-      )
+    # データベースへの保存処理をbegin-rescueで囲み、予期せぬエラーを捕捉する
+    begin
+      # transaction内で!付きメソッドを使い、データの整合性を保つ
+      ActiveRecord::Base.transaction do
+        order = Order.create!(user_id: user_id, item_id: item_id)
+        ShippingAddress.create!(postcode: postcode, prefecture_id: prefecture_id, city: city, block: block, building: building, phone_number: phone_number, order_id: order.id)
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => e
+      # データベースレベルでエラーが発生した場合（例：売り切れのタイミングでの重複購入）
+      # ログにエラーを記録し、errorsオブジェクトにメッセージを追加してfalseを返す
+      Rails.logger.error("Order creation failed: #{e.message}")
+      errors.add(:base, 'An error occurred during purchase. Please try again.')
+      return false
     end
     true
-  rescue ActiveRecord::RecordInvalid
-    # transaction内でエラーが発生した場合、falseを返して処理を終える
-    false
   end
 
   private
 
-  def item_exists?
-    item_id.present?
-  end
-
   def seller_cannot_be_buyer
-    # if: :item_exists? でitemの存在は保証されているため、item&. は不要
+    return if item.nil?
     errors.add(:user_id, "can't purchase their own item") if item.user_id == user_id
   end
 
   def item_is_not_already_sold
-    # if: :item_exists? でitemの存在は保証されているため、item&. は不要
+    return if item.nil?
     errors.add(:item_id, 'has already been sold') if item.order.present?
   end
 
