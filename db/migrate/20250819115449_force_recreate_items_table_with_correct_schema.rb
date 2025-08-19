@@ -26,17 +26,10 @@ class ForceRecreateItemsTableWithCorrectSchema < ActiveRecord::Migration[7.1]
     # 2. 最新の定義で、まっさらなitemsテーブルを再作成する
     create_table :items, &method(:latest_schema)
 
-    # 3. バックアップからデータを移行する
-    # （今回はデータがないとのことですが、安全のため記述します）
-    # 古いカラム名から新しいカラム名に対応させながらデータをコピーします。
-    execute <<-SQL
-      INSERT INTO items (id, name, description, price, user_id, category_id, condition_id, postage_id, prefecture_id, shipping_day_id, created_at, updated_at)
-      SELECT id, name, info, price, user_id, category_id, sales_status_id, shipping_fee_status_id, prefecture_id, scheduled_delivery_id, created_at, updated_at
-      FROM items_old;
-    SQL
+    # 3. データ移行は行わない（データがないため、これが最も安全で確実）
 
-    # 4. 役目を終えたバックアップテーブルを完全に削除する
-    drop_table :items_old
+    # 4. 役目を終えたバックアップテーブルを、関連する制約ごと強制的に削除する
+    drop_table :items_old, force: :cascade
   end
 
   def down
