@@ -5,14 +5,14 @@ class OrdersController < ApplicationController
 
   def index
     gon.public_key = ENV["PAYJP_PUBLIC_KEY"]
-    @order_address = OrderAddress.new
+    @order_shipping_address = OrderShippingAddress.new
   end
 
   def create
-    @order_address = OrderAddress.new(order_params)
-    if @order_address.valid?
+    @order_shipping_address = OrderShippingAddress.new(order_params)
+    if @order_shipping_address.valid?
       pay_item
-      @order_address.save
+      @order_shipping_address.save
       redirect_to root_path
     else
       gon.public_key = ENV["PAYJP_PUBLIC_KEY"]
@@ -23,7 +23,7 @@ class OrdersController < ApplicationController
   private
 
   def order_params
-    params.require(:order_address).permit(:postal_code, :prefecture_id, :city, :street_address, :building_name, :phone_number).merge(user_id: current_user.id, item_id: params[:item_id], token: params[:token])
+    params.require(:order_shipping_address).permit(:postcode, :prefecture_id, :city, :block, :building, :phone_number).merge(user_id: current_user.id, item_id: params[:item_id], token: params[:token])
   end
 
   def set_item

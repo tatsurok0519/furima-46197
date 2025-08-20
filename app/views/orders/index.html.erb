@@ -6,7 +6,7 @@
       購入内容の確認
     </h1>
     <%# エラーメッセージの表示 %>
-    <%= render 'shared/error_messages', model: @order_address %>
+    <%= render 'shared/error_messages', model: @order_shipping_address %>
     
     <%# 購入内容の表示 %>
     <div class='buy-item-info'>
@@ -17,7 +17,7 @@
         </h2>
         <div class='buy-item-price'>
           <p class="item-price-text">¥ <%= number_with_delimiter(@item.price) %></p>
-          <p class="item-price-sub-text"><%= @item.postage.name %></p>
+          <p class="item-price-sub-text"><%= @item.postage&.name %></p>
         </div>
       </div>
     </div>
@@ -34,7 +34,7 @@
     </div>
     <%# /支払額の表示 %>
 
-    <%= form_with model: @order_address, url: item_orders_path(@item.id), id: 'charge-form', data: { turbo: false }, novalidate: true do |f| %>
+    <%= form_with model: @order_shipping_address, url: item_orders_path(@item.id), id: 'charge-form', data: { turbo: false }, novalidate: true do |f| %>
     <%# カード情報の入力 %>
     <div class="credit-card-form">
       <h2 class="info-input-haedline">
