@@ -36,3 +36,5 @@
 
 .Ds_Store
 
+# Windowsの代替データストリームを無視する
+*:Zone.Identifier
