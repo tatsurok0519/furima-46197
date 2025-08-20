@@ -29,19 +29,16 @@ const pay = () => {
   
     payjp.createToken(numberElement).then(function (response) {
       if (response.error) {
-        // エラーメッセージをアラートで表示
-        alert(response.error.message);
-        submitButton.disabled = false;
       } else {
         const token = response.id;
         const tokenObj = `<input value=${token} name='token' type="hidden">`;
         form.insertAdjacentHTML("beforeend", tokenObj);
       
-        numberElement.clear();
-        expiryElement.clear();
-        cvcElement.clear();
-        form.submit();
       }
+      numberElement.clear();
+      expiryElement.clear();
+      cvcElement.clear();
+      form.submit();
     });
   });
 };
