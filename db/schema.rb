@@ -52,7 +52,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_18_082653) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_items_on_user_id"
-    t.check_constraint "`price` between 300 and 9999999", name: "items_price_check"
   end
 
   create_table "orders", charset: "utf8mb3", force: :cascade do |t|

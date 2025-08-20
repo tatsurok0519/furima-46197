@@ -16,6 +16,6 @@ class CreateItems < ActiveRecord::Migration[7.1]
 
     # DBレベルでのデータ整合性を保つため、価格帯に制約を追加します。
     # (例: 300円〜9,999,999円)
-    add_check_constraint :items, 'price BETWEEN 300 AND 9999999', name: 'items_price_check'
+    # add_check_constraint :items, 'price BETWEEN 300 AND 9999999', name: 'items_price_check'
   end
 end
