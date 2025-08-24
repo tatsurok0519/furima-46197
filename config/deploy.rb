@@ -32,3 +32,12 @@ namespace :deploy do
     invoke 'unicorn:restart'
   end
 end
+
+# 既存の :bundle_config にマージするイメージで
+set :bundle_config, fetch(:bundle_config, {}).merge(
+  'deployment' => 'true',
+  'path'       => fetch(:bundle_path, shared_path.join('bundle')).to_s,
+  'without'    => fetch(:bundle_without, 'development test'),
+  'force_ruby_platform' => 'true',
+  'build.mysql2' => '--with-mysql-config=/usr/bin/mysql_config --with-ldflags=-L/usr/lib64 --with-cppflags=-I/usr/include'
+)
