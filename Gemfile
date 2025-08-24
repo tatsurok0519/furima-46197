@@ -52,6 +52,11 @@ group :development, :test do
   gem 'faker'
   gem 'database_cleaner-active_record'
   gem 'pry-byebug'
+  gem 'capistrano'
+  gem 'capistrano-rbenv'
+  gem 'capistrano-bundler'
+  gem 'capistrano-rails'
+  gem 'capistrano3-unicorn'
 end
 
 group :development do
