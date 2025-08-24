@@ -38,3 +38,7 @@
 
 # Windowsの代替データストリームを無視する
 *:Zone.Identifier
+# Capistrano server-side dirs
+/repo/
+/releases/
+/shared/
