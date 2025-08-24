@@ -68,5 +68,3 @@
   - `has_one :address`
 - **Address**
   - `belongs_to :order`
-
-  echo "" >> README.md 
